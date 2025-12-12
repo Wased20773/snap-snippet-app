@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// A user can be a guest with only an id
+model User {
+  id              String      @id @default(uuid()) @db.Uuid
+  name            String      @db.Text
+  email           String      @unique @db.Text
+  hashedPassword  String      @db.Text
+
+  subscription    Subscription?
+  BillingHistory  BillingHistory[]
+  code            Code[]      // all code submissions by the user
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+}
+
+model Subscription {
+  id                    String      @id @default(uuid()) @db.Uuid
+  userId                String      @unique @db.Uuid
+  user                  User        @relation(fields: [userId], references: [id])
+
+  tier                  String      @default("free")  // free/pro/unlimited
+  dailyScanLimit        Int?                          // 10, 25, NULL for unlimited
+  scansUsedToday        Int         @default(0)
+  lastResetDate         DateTime?                     // NULL for new users
+  status                String                        // Active, none
+  renewal_date          DateTime?
+  stripeSubscriptionId  String?     @map("stripe_subscription_id")
+  
+  createdAt             DateTime    @default(now())
+}
+
+model BillingHistory {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  user            User      @relation(fields: [userId], references:[id])
+
+  amount          Int       // smallest currency unlimited
+  currency        String
+  date            DateTime  @default(now())
+  stripeEventId   String?   @unique
+  eventType       String?
+}
+
+model Code {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  user        User      @relation(fields: [userId], references:[id])
+
+  codeInput   String
+  codeOutput  String
+  language    String
+  refactors   Refactor[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Refactor {
+  id          String    @id @default(uuid()) @db.Uuid
+  codeId      String    @db.Uuid
+  code        Code      @relation(fields: [codeId], references: [id])
+
+  refactoredCode        String
+
+  createdAt   DateTime   @default(now())
+}
