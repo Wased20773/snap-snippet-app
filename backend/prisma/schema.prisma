@@ -13,70 +13,82 @@ datasource db {
   provider = "postgresql"
 }
 
-// A user can be a guest with only an id
-model User {
-  id              String      @id @default(uuid()) @db.Uuid
+// --- Reset id sequence ---
+// This lists sequences for your table
+// SELECT pg_get_serial_sequence('users', 'id');
+//
+// Example output
+// pg_get_serial_sequence
+// -----------------------
+// public.users_id_seq
+//
+// You can reset it manually so the next inserted row gets the correct id
+// ALTER SEQUENCE users_id_seq RESTART WITH 1;
+//
+
+
+model users {
+  id              Int         @id @default(autoincrement())
   name            String      @db.Text
   email           String      @unique @db.Text
-  hashedPassword  String      @db.Text
+  hashed_password String      @db.Text
 
-  subscription    Subscription?
-  BillingHistory  BillingHistory[]
-  code            Code[]      // all code submissions by the user
+  subscription    subscription?
+  billing_history billing_history[]
+  code            code[]      // all code submissions by the user
 
   createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  updatedAt       DateTime    @updatedAt @default(now())
   deletedAt       DateTime?
 }
 
-model Subscription {
-  id                    String      @id @default(uuid()) @db.Uuid
-  userId                String      @unique @db.Uuid
-  user                  User        @relation(fields: [userId], references: [id])
+model subscription {
+  id                    Int         @id @default(autoincrement())
+  usersId               Int         @unique
+  users                 users       @relation(fields: [usersId], references: [id])
 
   tier                  String      @default("free")  // free/pro/unlimited
-  dailyScanLimit        Int?                          // 10, 25, NULL for unlimited
-  scansUsedToday        Int         @default(0)
-  lastResetDate         DateTime?                     // NULL for new users
+  daily_scan_limit      Int?        @default(10)      // 10, 25, NULL for unlimited
+  scans_used_today      Int         @default(0)
+  last_reset_date       DateTime?                     // NULL for new users
   status                String                        // Active, none
   renewal_date          DateTime?
-  stripeSubscriptionId  String?     @map("stripe_subscription_id")
+  stripe_subscriptionId String?     @map("stripe_subscription_id")
   
   createdAt             DateTime    @default(now())
 }
 
-model BillingHistory {
-  id              String    @id @default(uuid()) @db.Uuid
-  userId          String    @db.Uuid
-  user            User      @relation(fields: [userId], references:[id])
+model billing_history {
+  id                Int       @id @default(autoincrement())
+  usersId           Int    
+  users             users     @relation(fields: [usersId], references:[id])
 
-  amount          Int       // smallest currency unlimited
-  currency        String
-  date            DateTime  @default(now())
-  stripeEventId   String?   @unique
-  eventType       String?
+  amount            Int       // smallest currency unlimited
+  currency          String
+  date              DateTime  @default(now())
+  stripe_eventId    String?   @unique
+  event_type        String?
 }
 
-model Code {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @db.Uuid
-  user        User      @relation(fields: [userId], references:[id])
+model code {
+  id            Int       @id @default(autoincrement())
+  usersId       Int    
+  users         users     @relation(fields: [usersId], references:[id])
 
-  codeInput   String
-  codeOutput  String
-  language    String
-  refactors   Refactor[]
+  code_input    String
+  code_output   String
+  language      String
+  refactors     refactor[]
 
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
 }
 
-model Refactor {
-  id          String    @id @default(uuid()) @db.Uuid
-  codeId      String    @db.Uuid
-  code        Code      @relation(fields: [codeId], references: [id])
+model refactor {
+  id          Int       @id @default(autoincrement())
+  codeId      Int    
+  code        code      @relation(fields: [codeId], references: [id])
 
-  refactoredCode        String
+  refactored_code       String
 
-  createdAt   DateTime   @default(now())
+  createdAt   DateTime  @default(now())
 }
