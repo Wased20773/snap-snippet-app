@@ -1,4 +1,9 @@
-import { findUserByEmail, createUser } from "../services/auth.service.js";
+import {
+  createUser,
+  findUserByEmail,
+  generateJwt,
+  validatePassword,
+} from "../services/auth.service.js";
 
 export async function register(req, res) {
   try {
@@ -24,6 +29,50 @@ export async function register(req, res) {
     });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(500)
+      .json({ message: "Internal server error while trying to register" });
+  }
+}
+
+export async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
+    }
+
+    const existingUser = await findUserByEmail(email);
+    if (!existingUser) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const isValid = await validatePassword(
+      password,
+      existingUser.hashed_password
+    );
+    if (!isValid) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    const token = generateJwt(existingUser.id, existingUser.email);
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: existingUser.id,
+        email: existingUser.email,
+        name: existingUser.name,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    res
+      .status(500)
+      .json({ message: "Internal server error while trying to login" });
   }
 }

@@ -1,15 +1,13 @@
-import pool from "../db/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import pool from "../db/index.js";
 
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Check if a user exists by email
 export async function findUserByEmail(email) {
-  const res = await pool.query(`SELECT email FROM users WHERE email = $1`, [
-    email,
-  ]);
+  const res = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
   return res.rows[0];
 }
 
@@ -27,8 +25,18 @@ export async function createUser(name, email, password) {
 
   // Generate JWT
   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: "7d",
+    expiresIn: "7d", // maybe ask user if they want to stay logged in?
   });
 
   return { user, token };
+}
+
+// Validating user input password -> true or false
+export async function validatePassword(password, hashedPassword) {
+  return bcrypt.compare(password, hashedPassword);
+}
+
+// Generates the JWT token after login
+export function generateJwt(id, email) {
+  return jwt.sign({ id, email }, JWT_SECRET, { expiresIn: "7d" });
 }
