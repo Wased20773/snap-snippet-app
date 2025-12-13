@@ -32,7 +32,10 @@ export async function register(req, res) {
     console.error(e);
     res
       .status(500)
-      .json({ message: "Internal server error while trying to register" });
+      .json({
+        message: "Internal server error while trying to register",
+        error: e.message,
+      });
   }
 }
 
@@ -73,8 +76,9 @@ export async function login(req, res) {
     });
   } catch (e) {
     console.error(e);
-    res
-      .status(500)
-      .json({ message: "Internal server error while trying to login" });
+    res.status(500).json({
+      message: "Internal server error while trying to login",
+      error: e.message,
+    });
   }
 }

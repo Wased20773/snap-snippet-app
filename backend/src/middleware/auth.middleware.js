@@ -23,6 +23,8 @@ export function authenticate(req, res, next) {
     // continue to the route handler
     next();
   } catch (e) {
-    return res.status(403).json({ message: "Invalid or expired token: ", e });
+    return res
+      .status(403)
+      .json({ message: "Invalid or expired token: ", error: e.message });
   }
 }

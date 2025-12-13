@@ -27,6 +27,8 @@ export async function getProfile(req, res) {
     });
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ message: "Error fetching profile info" });
+    return res
+      .status(500)
+      .json({ message: "Error fetching profile info", error: e.message });
   }
 }
