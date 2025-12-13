@@ -16,12 +16,19 @@ export async function createUser(name, email, password) {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
+  // Initialize user
   const res = await pool.query(
     `INSERT INTO users (name, email, hashed_password) VALUES ($1, $2, $3) RETURNING id, email`,
     [name, email, hashedPassword]
   );
 
   const user = res.rows[0];
+
+  // Initialize subscription plan for new user
+  await pool.query(
+    `INSERT INTO subscription ("usersId", tier, status) VALUES ($1, $2, $3)`,
+    [user.id, "free", "none"]
+  );
 
   // Generate JWT
   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {

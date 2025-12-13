@@ -5,6 +5,7 @@ import {
   validatePassword,
 } from "../services/auth.service.js";
 
+// Registers a new account into the database
 export async function register(req, res) {
   try {
     const { name, email, password } = req.body;
@@ -35,6 +36,7 @@ export async function register(req, res) {
   }
 }
 
+// Logs user into their account
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
