@@ -28,24 +28,26 @@ datasource db {
 
 
 model users {
-  id              Int         @id @default(autoincrement())
-  name            String      @db.Text
-  email           String      @unique @db.Text
-  hashed_password String      @db.Text
+  id              Int                 @id @default(autoincrement())
+  name            String              @db.Text
+  email           String              @unique @db.Text
+  hashed_password String              @db.Text
 
-  subscription    subscription?
-  billing_history billing_history[]
-  code            code[]      // all code submissions by the user
+  subscription    subscription?       
+  billing_history billing_history[]   
+  code            code[]              // all code submissions by the user
 
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt @default(now())
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt @default(now())
   deletedAt       DateTime?
+
+
 }
 
 model subscription {
   id                    Int         @id @default(autoincrement())
   usersId               Int         @unique
-  users                 users       @relation(fields: [usersId], references: [id])
+  users                 users       @relation(fields: [usersId], references: [id], onDelete: Cascade)
 
   tier                  String      @default("free")  // free/pro/unlimited
   daily_scan_limit      Int?        @default(10)      // 10, 25, NULL for unlimited
@@ -61,7 +63,7 @@ model subscription {
 model billing_history {
   id                Int       @id @default(autoincrement())
   usersId           Int    
-  users             users     @relation(fields: [usersId], references:[id])
+  users             users     @relation(fields: [usersId], references:[id], onDelete: Cascade)
 
   amount            Int       // smallest currency unlimited
   currency          String
@@ -73,7 +75,7 @@ model billing_history {
 model code {
   id            Int       @id @default(autoincrement())
   usersId       Int    
-  users         users     @relation(fields: [usersId], references:[id])
+  users         users     @relation(fields: [usersId], references:[id], onDelete: Cascade)
 
   code_input    String
   code_output   String
@@ -86,7 +88,7 @@ model code {
 model refactor {
   id          Int       @id @default(autoincrement())
   codeId      Int    
-  code        code      @relation(fields: [codeId], references: [id])
+  code        code      @relation(fields: [codeId], references: [id], onDelete: Cascade)
 
   refactored_code       String
 
