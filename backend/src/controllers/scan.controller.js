@@ -1,5 +1,7 @@
-import { validateCodeSyntax } from "../services/ai.service.js";
-import { extractedCodeFromImage } from "../services/ocr.service.js";
+import {
+  extractedCodeFromImage,
+  repairIndentation,
+} from "../services/ocr.service.js";
 import { runCodeInSandbox } from "../services/sandbox.service.js";
 
 export async function scanCode(req, res) {
@@ -9,23 +11,28 @@ export async function scanCode(req, res) {
     // 1. Extract code from image using OCR
     const extractedCode = await extractedCodeFromImage(image);
 
-    // 2. Validate syntax with AI
-    const syntaxResult = await validateCodeSyntax(extractedCode, language);
+    // 2. Validate syntax with AI (Probably dont need)
+    // const syntaxResult = await validateCodeSyntax(extractedCode, language);
+    // if (!syntaxResult.valid) {
+    //   return res.status(200).json({
+    //     // 3a. Send syntax errors + suggestions back
+    //     code: extractedCode,
+    //     error: syntaxResult.error,
+    //     suggestions: syntaxResult.suggestions,
+    //   });
+    // }
 
-    if (!syntaxResult.valid) {
-      return res.status(200).json({
-        // 3a. Send syntax errors + suggestions back
-        code: extractedCode,
-        error: syntaxResult.error,
-        suggestions: syntaxResult.suggestions,
-      });
-    }
+    // 2. fix indentations for?
+    let finalCode = extractedCode;
+    finalCode = repairIndentation(extractedCode);
+
+    console.log(finalCode);
 
     // 3b. Run code in sandbox
-    const sandboxResult = await runCodeInSandbox(extractedCode, language);
+    const sandboxResult = await runCodeInSandbox(finalCode, language);
 
     let response = {
-      code: extractedCode,
+      code: finalCode,
       output: sandboxResult.output,
       error: sandboxResult.error || null,
     };

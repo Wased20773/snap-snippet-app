@@ -10,7 +10,7 @@ export async function runCodeInSandbox(code, language) {
   const languageConfig = {
     python: { image: "python:3.12-alpine", cmd: "python" },
     javascript: { image: "node:20-alpine", cmd: "node" },
-    cpp: { image: "gcc:12-alpine", cmd: "g++" },
+    cpp: { image: "gcc:12", cmd: "g++" },
   };
 
   const config = languageConfig[language.toLowerCase()];
