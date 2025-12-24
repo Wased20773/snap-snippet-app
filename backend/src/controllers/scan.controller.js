@@ -1,5 +1,6 @@
 import {
   extractedCodeFromImage,
+  normalizeCharacters,
   repairIndentation,
 } from "../services/ocr.service.js";
 import { runCodeInSandbox } from "../services/sandbox.service.js";
@@ -9,7 +10,10 @@ export async function scanCode(req, res) {
     const { image, language } = req.body; // image: base64 string
 
     // 1. Extract code from image using OCR
-    const extractedCode = await extractedCodeFromImage(image);
+    let extractedCode = await extractedCodeFromImage(image);
+
+    // 2. normalize OCR junk
+    extractedCode = await normalizeCharacters(extractedCode);
 
     // 2. Validate syntax with AI (Probably dont need)
     // const syntaxResult = await validateCodeSyntax(extractedCode, language);
@@ -22,15 +26,14 @@ export async function scanCode(req, res) {
     //   });
     // }
 
-    // 2. fix indentations for?
-    let finalCode = extractedCode;
-    finalCode = repairIndentation(extractedCode);
-
+    // 3. fix indentations for?
+    const finalCode = repairIndentation(extractedCode);
     console.log(finalCode);
 
-    // 3b. Run code in sandbox
+    // 4. Run code in sandbox
     const sandboxResult = await runCodeInSandbox(finalCode, language);
 
+    // 5. Create response for the code
     let response = {
       code: finalCode,
       output: sandboxResult.output,
